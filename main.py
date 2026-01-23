@@ -23,7 +23,8 @@ class GameView(arcade.View):
 
 
         # If you have sprite lists, you should create them here,
-        # and set them to None
+        self.player_list = arcade.SpriteList()
+        self.box_list = arcade.SpriteList()
 
         #Bigboy sprite here
         self.player_texture= arcade.load_texture("resources/bigboy-removebg-preview.png")
@@ -32,10 +33,19 @@ class GameView(arcade.View):
         self.player_sprite.scale = 0.28
         self.player_sprite.center_x = 128
         self.player_sprite.center_y = 200
+        self.player_list.append(self.player_sprite)
+
+        #Lightweight sprite here
+        box_texture = arcade.load_texture("resources/lightweight-removebg-preview.png")
+        box_sprite= arcade.Sprite(box_texture)
+        box_sprite.scale = 0.5
+        box_sprite.center_x = 200
+        box_sprite.center_y = 250
+        self.box_list.append(box_sprite)
 
         #physics engine (constantly updating to detect movement and collisions, has to be below sprites)
         self.physics_engine = arcade.PhysicsEngineSimple(
-            self.player_sprite
+            self.player_sprite,self.box_list
         )
         
 
@@ -55,7 +65,8 @@ class GameView(arcade.View):
 
         # Call draw() on all your sprite lists below
         arcade.draw_rect_filled(arcade.rect.XYWH(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, 600, 600), arcade.color.AIR_FORCE_BLUE)
-        arcade.draw_sprite(self.player_sprite)
+        self.player_list.draw()
+        self.box_list.draw()
 
 
     def on_update(self, delta_time):
@@ -66,7 +77,6 @@ class GameView(arcade.View):
         """
 
         self.physics_engine.update()
-        pass
 
     def on_key_press(self, key, key_modifiers):
         """
@@ -97,7 +107,6 @@ class GameView(arcade.View):
             self.player_sprite.change_x = 0
         elif key == arcade.key.RIGHT or key == arcade.key.D:
             self.player_sprite.change_x = 0
-        pass
 
     def on_mouse_motion(self, x, y, delta_x, delta_y):
         """
