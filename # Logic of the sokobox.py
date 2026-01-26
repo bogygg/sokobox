@@ -4,6 +4,7 @@ import arcade
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
 WINDOW_TITLE = "Starting Template"
+PLAYER_MOVEMENT_SPEED = 60
 
 
 class GameView(arcade.View):
@@ -52,12 +53,29 @@ class GameView(arcade.View):
             counter3 += 60 
             self.walls.append(self.wall)
 
-        self.player_texture= arcade.load_texture("качок.png")
+        self.player_list = arcade.SpriteList()
+        self.box_list = arcade.SpriteList()
+        
+        self.player_texture= arcade.load_texture("bigboy.png")
         self.player_sprite = arcade.Sprite(self.player_texture)
-        self.player_sprite.scale = 0.25
-        self.player_sprite.center_x = 64
-        self.player_sprite.center_y = 128
+        self.player_sprite.scale = 0.16
+        self.player_sprite.center_x = 430
+        self.player_sprite.center_y = 570
+        self.player_list.append(self.player_sprite)
 
+        box_texture = arcade.load_texture("lightweight.png")
+        box_sprite= arcade.Sprite(box_texture)
+        box_sprite.scale = 0.3
+        box_sprite.center_x = 490
+        box_sprite.center_y = 330
+        self.box_list.append(box_sprite)
+
+        self.physics_engine = arcade.PhysicsEngineSimple(
+            self.player_sprite
+            
+        )
+
+        self.move_direction = None
         
 
     def reset(self):
@@ -77,7 +95,7 @@ class GameView(arcade.View):
 
         # Call draw() on all your sprite lists below
         
-        arcade.draw_rect_filled(arcade.rect.XYWH(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, 600, 600), arcade.color.AIR_FORCE_BLUE)
+        arcade.draw_rect_filled(arcade.rect.XYWH(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, 600, 600), arcade.color.DARK_YELLOW)
 
         add = 0
         for i in range(11):
@@ -90,30 +108,56 @@ class GameView(arcade.View):
 
         self.walls.draw()
         arcade.draw_sprite(self.player_sprite)
+        self.player_list.draw()
+        self.box_list.draw()
 
     def on_update(self, delta_time):
-        """
-        All the logic to move, and the game logic goes here.
-        Normally, you'll call update() on the sprite lists that
-        need it.
-        """
-        '''if arcade.check_for_collision(self.player_sprite, self.walls):
-            print("Hit Wall!")'''
-        pass
+        
+        '''All the logic to move, and the game logic goes here.'''
+        self.physics_engine.update()
+       
+        if arcade.check_for_collision_with_list(self.player_sprite, self.walls):
+            print("Hit Wall!")
+        
 
     def on_key_press(self, key, key_modifiers):
         """
         Called whenever a key on the keyboard is pressed.
-
+        
         For a full list of keys, see:
         https://api.arcade.academy/en/latest/arcade.key.html
         """
+        
+        if key == arcade.key.UP or key == arcade.key.W:
+            self.move_direction = "up"
+        elif key == arcade.key.DOWN or key == arcade.key.S:
+            self.move_direction = "down"
+        elif key == arcade.key.LEFT or key == arcade.key.A:
+            self.move_direction = "left"
+        elif key == arcade.key.RIGHT or key == arcade.key.D:
+            self.move_direction = "right"
+        
         pass
 
     def on_key_release(self, key, key_modifiers):
         """
         Called whenever the user lets off a previously pressed key.
         """
+        if hasattr(self, 'move_direction') and self.move_direction:
+            if self.move_direction == "up":
+                self.player_sprite.center_y += 60
+            elif self.move_direction == "down":
+                self.player_sprite.center_y -= 60
+            elif self.move_direction == "left":
+                self.player_sprite.center_x -= 60
+            elif self.move_direction == "right":
+                self.player_sprite.center_x += 60
+            
+        # Reset direction and velocity
+        self.move_direction = None
+        self.player_sprite.change_x = 0
+        self.player_sprite.change_y = 0
+    
         pass
 
     def on_mouse_motion(self, x, y, delta_x, delta_y):
