@@ -4,8 +4,10 @@ import arcade
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
 WINDOW_TITLE = "SokoBox"
-PLAYER_MOVEMENT_SPEED = 4
-
+PLAYER_MOVEMENT_SPEED = 5
+#damping is amount of speed lost per second when an force not acting on object (deceleration)
+DEFAULT_DAMPING= 100
+BOX_FRICTION = 0.7
 
 class GameView(arcade.View):
     """
@@ -19,23 +21,33 @@ class GameView(arcade.View):
     def __init__(self):
         super().__init__()
 
-        self.background_color = arcade.color.AMAZON
-
 
         # If you have sprite lists, you should create them here,
+        self.player_list = None
+        self.box_list = None
+
+        #basic crap
+        self.background_color = arcade.color.AMAZON
+        self.window.set_mouse_visible(False)
+
+        
+
+    def setup(self):
+        #setup game here AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+        #sprite lists
         self.player_list = arcade.SpriteList()
         self.box_list = arcade.SpriteList()
 
-        #Bigboy sprite here
+        #Bigboy setup 
         self.player_texture= arcade.load_texture("resources/bigboy-removebg-preview.png")
-        
         self.player_sprite = arcade.Sprite(self.player_texture)
-        self.player_sprite.scale = 0.28
+        self.player_sprite.scale = 0.18
         self.player_sprite.center_x = 128
         self.player_sprite.center_y = 200
         self.player_list.append(self.player_sprite)
 
-        #Lightweight sprite here
+        #LIGHTWEIGHTT
         box_texture = arcade.load_texture("resources/lightweight-removebg-preview.png")
         box_sprite= arcade.Sprite(box_texture)
         box_sprite.scale = 0.5
@@ -47,12 +59,6 @@ class GameView(arcade.View):
         self.physics_engine = arcade.PhysicsEngineSimple(
             self.player_sprite,self.box_list
         )
-        
-
-    def reset(self):
-        """Reset the game to the initial state."""
-        # Do changes needed to restart the game here if you want to support that
-        pass
 
     def on_draw(self):
         """
@@ -75,8 +81,17 @@ class GameView(arcade.View):
         Normally, you'll call update() on the sprite lists that
         need it.
         """
+        self.physics_engine.update(self.box_list)
 
-        self.physics_engine.update()
+        box_hit_list=arcade.check_for_collision_with_list(
+            self.player_sprite, self.box_list
+        )
+
+
+        
+
+
+
 
     def on_key_press(self, key, key_modifiers):
         """
@@ -86,7 +101,7 @@ class GameView(arcade.View):
         https://api.arcade.academy/en/latest/arcade.key.html
         """
         if key == arcade.key.UP or key == arcade.key.W:
-            self.player_sprite.change_y = PLAYER_MOVEMENT_SPEED
+           self.player_sprite.change_y = PLAYER_MOVEMENT_SPEED
         elif key == arcade.key.DOWN or key == arcade.key.S:
             self.player_sprite.change_y = -PLAYER_MOVEMENT_SPEED
         elif key == arcade.key.LEFT or key == arcade.key.A:
