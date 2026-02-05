@@ -4,7 +4,7 @@ import arcade
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
 WINDOW_TITLE = "Starting Template"
-PLAYER_MOVEMENT_SPEED = 60
+PLAYER_MOVEMENT_SPEED = 5
 
 
 class GameView(arcade.View):
@@ -22,45 +22,75 @@ class GameView(arcade.View):
         # If you have sprite lists, you should create them here,
         # and set them to None
         
-        self.walls = arcade.SpriteList()
+        self.walls = arcade.SpriteList(use_spatial_hash=True)
         self.wall_texture = arcade.load_texture("stone4.png")
         counter = 0
+        sub = 0
         for i in range(10):
             self.wall = arcade.Sprite(self.wall_texture)
             self.wall.center_x = 370 + counter
             self.wall.center_y = 90
             counter += 60 
             self.walls.append(self.wall)
+            if i > 7:
+                self.wall = arcade.Sprite(self.wall_texture)
+                self.wall.center_x = 670
+                self.wall.center_y = 570 - sub
+                sub += 60
+                self.walls.append(self.wall)
         counter1 = 0
+        sub1 = 0
         for i in range(10):
             self.wall = arcade.Sprite(self.wall_texture)
             self.wall.center_x = 370 + counter1
             self.wall.center_y = 630
             counter1 += 60 
             self.walls.append(self.wall)
+            if i > 7:
+                self.wall = arcade.Sprite(self.wall_texture)
+                self.wall.center_x = 550
+                self.wall.center_y = 570 - sub1
+                sub1 += 60
+                self.walls.append(self.wall)
+
         counter2 = 0
+        sub3 = 0
         for i in range(8):
             self.wall = arcade.Sprite(self.wall_texture)
             self.wall.center_x = 370 
             self.wall.center_y = 150 + counter2
             counter2 += 60 
             self.walls.append(self.wall)
+            if i > 5:
+                self.wall = arcade.Sprite(self.wall_texture)
+                self.wall.center_x = 550
+                self.wall.center_y = 270 - sub3
+                sub3 += 120
+                self.walls.append(self.wall)
         counter3 = 0
+        sub4 = 0
         for i in range(8):
             self.wall = arcade.Sprite(self.wall_texture)
             self.wall.center_x = 910 
             self.wall.center_y = 150 + counter3
             counter3 += 60 
             self.walls.append(self.wall)
+            if i > 5:
+                self.wall = arcade.Sprite(self.wall_texture)
+                self.wall.center_x = 790 - sub4 
+                self.wall.center_y = 390 - sub4
+                sub4 += 120 
+                self.walls.append(self.wall)
 
-        self.player_list = arcade.SpriteList()
-        self.box_list = arcade.SpriteList()
         
-        self.player_texture= arcade.load_texture("bigboy.png")
-        self.player_sprite = arcade.Sprite(self.player_texture)
+        self.player_list = arcade.SpriteList()
+        self.box_list = arcade.SpriteList(use_spatial_hash=True)
+        
+        self.player_texture= arcade.load_texture("bigboy2.png")
+        self.player_sprite = arcade.Sprite(self.player_texture, hit_box_algorithm='Simple')
         self.player_sprite.scale = 0.16
-        self.player_sprite.center_x = 430
-        self.player_sprite.center_y = 570
+        self.player_sprite.center_x = 490
+        self.player_sprite.center_y = 510
         self.player_list.append(self.player_sprite)
 
         box_texture = arcade.load_texture("lightweight.png")
@@ -71,8 +101,7 @@ class GameView(arcade.View):
         self.box_list.append(box_sprite)
 
         self.physics_engine = arcade.PhysicsEngineSimple(
-            self.player_sprite
-            
+            self.player_sprite, self.walls
         )
 
         self.move_direction = None
@@ -109,6 +138,10 @@ class GameView(arcade.View):
         self.walls.draw()
         arcade.draw_sprite(self.player_sprite)
         self.player_list.draw()
+        self.player_sprite.draw_hit_box(arcade.color.RED)
+
+        for wall in self.walls:
+            self.wall.draw_hit_box(arcade.color.BLUE)
         self.box_list.draw()
 
     def on_update(self, delta_time):
@@ -128,37 +161,51 @@ class GameView(arcade.View):
         https://api.arcade.academy/en/latest/arcade.key.html
         """
         
-        if key == arcade.key.UP or key == arcade.key.W:
-            self.move_direction = "up"
+        '''if key == arcade.key.UP or key == arcade.key.W:
+            self.player_sprite.change_y = PLAYER_MOVEMENT_SPEED
         elif key == arcade.key.DOWN or key == arcade.key.S:
-            self.move_direction = "down"
+            self.player_sprite.change_y = -PLAYER_MOVEMENT_SPEED
         elif key == arcade.key.LEFT or key == arcade.key.A:
-            self.move_direction = "left"
+            self.player_sprite.change_x = -PLAYER_MOVEMENT_SPEED
         elif key == arcade.key.RIGHT or key == arcade.key.D:
-            self.move_direction = "right"
-        
-        pass
+            self.player_sprite.change_x = PLAYER_MOVEMENT_SPEED'''
+    
+    def try_move(self, dx, dy):
+        old_x = self.player_sprite.center_x
+        old_y = self.player_sprite.center_y
+
+        self.player_sprite.center_x += dx
+        self.player_sprite.center_y += dy
+
+        if arcade.check_for_collision_with_list(self.player_sprite, self.walls):
+            # Hit a wall → go back
+            self.player_sprite.center_x = old_x
+            self.player_sprite.center_y = old_y
 
     def on_key_release(self, key, key_modifiers):
         """
         Called whenever the user lets off a previously pressed key.
         """
-        if hasattr(self, 'move_direction') and self.move_direction:
-            if self.move_direction == "up":
-                self.player_sprite.center_y += 60
-            elif self.move_direction == "down":
-                self.player_sprite.center_y -= 60
-            elif self.move_direction == "left":
-                self.player_sprite.center_x -= 60
-            elif self.move_direction == "right":
-                self.player_sprite.center_x += 60
-            
+        
+
+        if key  == arcade.key.UP:
+            self.try_move(0, 60)
+        elif key == arcade.key.DOWN:
+            self.try_move(0, -60)
+        elif key == arcade.key.LEFT:
+            self.try_move(-60, 0)
+        elif key == arcade.key.RIGHT:
+            self.try_move(60, 0)
+
+        '''if not arcade.check_for_collision_with_list(self.player_sprite, self.walls):
+            self.player_sprite.center_x = next_x
+            self.player_sprite.center_y = next_y
         # Reset direction and velocity
         self.move_direction = None
         self.player_sprite.change_x = 0
-        self.player_sprite.change_y = 0
-    
-        pass
+        self.player_sprite.change_y = 0'''
+
+        
 
     def on_mouse_motion(self, x, y, delta_x, delta_y):
         """
